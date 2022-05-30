@@ -1,0 +1,20 @@
+Name: Update package
+Description: New Addin Description
+Binding: update_package
+Interactive: false
+
+Name: Test js
+Description: New Addin Description
+Binding: test_js
+Interactive: false
+
+Name: Start local server job
+Description: New Addin Description
+Binding: serverJob
+Interactive: false
+
+Name: Refresh app in session
+Description: New Addin Description
+Binding: refreshApp
+Interactive: false
+
