@@ -1,21 +1,57 @@
 #' Generate an app instance
 #'
+#' @param plt a widget
+#' @param name name of the app, default="app"
+#' @param js js file name (no need for folder)
+#' @param css css file name (no need for folder)
 #' @return a list
 #' @export
-App <- function(plt){
+App <- function(plt, name="app", js=NA, css=NA){
   app <- new.env()
   app$create <- function(htmlfile="temp/index.html"){
     app$file <- htmlfile
-    create_testapp(plt, htmlfile)}
+    create_appMeta(app, plt=plt, name=name, js=js, css=css, newCreate=T)
+    create_testapp(app$meta, htmlfile)}
   app$setup <- function(app_port=4321, chromedrivePort=9515){
-    start_appservice(app$file, chromedrivePort, app_port)
+    app$meta$app_port = app_port
+    start_appservice(app$file, chromedrivePort, app_port) -> app$meta$jobId
   }
   app$view <- refreshApp
-  app$update <- function(plt){
-    create_testapp(plt, app$file)
+  app$update <- function(plt=NULL, name=NA, js=NA, css=NA){
+    flag_mustUpdateApp = !is.null(plt)
+    if(flag_mustUpdateApp) app$meta$appcontent=plt
+    flag_jsAlreadyInMeta=!is.null(app$meta$js)
+    flag_cssAlreadyInMeta=!is.null(app$meta$css)
+    flag_nameChange = !is.na(name) && app$meta$name != name
+    flag_jsChange =
+      !is.na(js) &&
+      (!flag_jsAlreadyInMeta
+      || (flag_jsAlreadyInMeta && app$meta$js!=basename(js)))
+    flag_cssChange =
+      !is.na(css) &&
+      (!flag_cssAlreadyInMeta
+        || (flag_cssAlreadyInMeta && app$meta$css!=basename(css)))
+
+    flag_dependencyChange = (isTRUE(flag_nameChange) || isTRUE(flag_jsChange) || isTRUE(flag_cssChange))
+
+    flag_pltUpdate = (!is.null(plt) && !identical(app$meta$appcontent,plt)) || !flag_dependencyChange
+
+    if(flag_dependencyChange) updateDependency(app, name=name, js=js, css=css)
+
+    create_testapp(app$meta$appcontent, app$file)
     app$view()
   }
-  app$restart <- restartApp(app)
+  app$resume <- resumeApp(app)
+  app$suspend <- function(){
+    rstudioapi::launcherControlJob(
+      jobId = app$meta$jobId, operation="suspend"
+    )
+  }
+  app$stop <- function(){
+    rstudioapi::launcherControlJob(
+      jobId = app$meta$jobId, operation="kill"
+    )
+  }
   app
 }
 
@@ -104,14 +140,24 @@ chromeDriverShowWidget <- function(sessionx){
 }
 #' Create a web app from shiny tag
 #'
-#' @param tag a shiny tag
+#' @param appmeta app$meta
 #' @param folderpath folder path
 #' @param htmlfile html file name.
 #'
 #' @return the full path to the app which is file.path(folderpath, htmlfile)
 #' @export
 #'
-create_testapp = function(tag=.Last.value, htmlfile="temp/index.html"){
+create_testapp = function(appmeta, htmlfile="temp/index.html"){
+  appmeta=app$meta
+  if(!is.function(appmeta$dependency) && is.na(appmeta$dependency)){
+    tag=appmeta$appcontent
+  } else {
+    tag=htmltools::tagList(
+      appmeta$appcontent,
+      appmeta$dependency()
+    )
+  }
+  # tag=app$meta$appcontent
   folderpath = dirname(htmlfile)
   htmlfile=basename(htmlfile)
   if(!dir.exists(folderpath)) dir.create(folderpath)
@@ -133,8 +179,8 @@ refreshApp <- function(){
   )
   session$appRefresh()
 }
-restartApp <- function(app){
-  function(chromedrivePort=9515, app_port=4321){
+resumeApp <- function(app){
+  function(chromedrivePort=9515, app_port=app$meta$jobId){
 
     .GlobalEnv$app_port <- app_port
     appPath=normalizePath(app$file)

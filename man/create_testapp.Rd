@@ -4,14 +4,14 @@
 \alias{create_testapp}
 \title{Create a web app from shiny tag}
 \usage{
-create_testapp(tag = .Last.value, folderpath = "temp", htmlfile = "index.html")
+create_testapp(appmeta, htmlfile = "temp/index.html")
 }
 \arguments{
-\item{tag}{a shiny tag}
-
-\item{folderpath}{folder path}
+\item{appmeta}{app$meta}
 
 \item{htmlfile}{html file name.}
+
+\item{folderpath}{folder path}
 }
 \value{
 the full path to the app which is file.path(folderpath, htmlfile)

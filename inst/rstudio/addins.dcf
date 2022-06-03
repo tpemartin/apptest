@@ -18,3 +18,8 @@ Description: New Addin Description
 Binding: refreshApp
 Interactive: false
 
+Name: Launch Regular Chrome
+Description: New Addin Description
+Binding: launchRegularChrome
+Interactive: false
+

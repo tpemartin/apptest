@@ -4,7 +4,11 @@
 \alias{start_appservice}
 \title{Start to serve web app at temp/ and lauch chromedriver for inspection}
 \usage{
-start_appservice(appPath = "./temp/index.html", chromedrivePort = 9515)
+start_appservice(
+  appPath = "./temp/index.html",
+  chromedrivePort = 9515,
+  app_port = 4321
+)
 }
 \value{
 a job id

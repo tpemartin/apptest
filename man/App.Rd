@@ -4,7 +4,16 @@
 \alias{App}
 \title{Generate an app instance}
 \usage{
-App()
+App(plt, name = "app", js = NA, css = NA)
+}
+\arguments{
+\item{plt}{a widget}
+
+\item{name}{name of the app, default="app"}
+
+\item{js}{js file name (no need for folder)}
+
+\item{css}{css file name (no need for folder)}
 }
 \value{
 a list
