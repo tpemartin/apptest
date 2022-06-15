@@ -60,6 +60,7 @@ showWidget <- function(tag=.Last.value, htmlfile="index.html"){
   rlang::eval_bare(toDo)
 
 }
+`%$%`=`%l%`=`%L%`
 dep_mobile <- function(){
   htmltools::htmlDependency(
     name="temp",
