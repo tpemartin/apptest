@@ -15,6 +15,51 @@ showWidget <- function(tag=.Last.value, htmlfile="index.html"){
   # ss$port
   rstudioapi::viewer(glue::glue("http://127.0.0.1:{ss$port}/{htmlfile}"))
 }
+#' An enhance |> operator. When LHS is not available, it will load_all(".") first.
+#'
+#' @param x LHS
+#' @param y RHS
+#'
+#' @return none.
+#' @export
+#'
+`%>>%` = function(x, y){
+  rlang::enexpr(y) -> exprY
+  rlang::enexpr(x) -> exprX
+  tryCatch(
+    {eval(exprX)},
+    error=function(e){
+      devtools::load_all(".")
+      # eval(exprX)
+    }
+  ) -> xObj
+
+  rlang::expr_deparse(exprX)->stringX
+  rlang::expr_deparse(exprY)->stringY
+  stringPipe=paste0(stringX, " |> ", stringY)
+  parse(text=stringPipe) -> toDo
+  rlang::eval_bare(toDo)
+
+}
+#' An enhance |> operator. It will load_all(".") first.
+#'
+#' @param x LHS
+#' @param y RHS
+#'
+#' @return none.
+#' @export
+#'
+`%L%` = function(x, y){
+  rlang::enexpr(y) -> exprY
+  rlang::enexpr(x) -> exprX
+  devtools::load_all(".")
+  rlang::expr_deparse(exprX)->stringX
+  rlang::expr_deparse(exprY)->stringY
+  stringPipe=paste0(stringX, " |> ", stringY)
+  rlang::parse_expr(stringPipe) -> toDo
+  rlang::eval_bare(toDo)
+
+}
 dep_mobile <- function(){
   htmltools::htmlDependency(
     name="temp",

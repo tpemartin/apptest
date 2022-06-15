@@ -4,16 +4,16 @@
 \alias{apptest}
 \title{Start app test}
 \usage{
-apptest(name = "app", js = NA, css = NA, port = 8880)
+apptest(name = "app", port = 8880, google = F)
 }
 \arguments{
 \item{name}{app name}
 
+\item{port}{port to serve app}
+
 \item{js}{js file for testing}
 
 \item{css}{css file for test}
-
-\item{port}{port to serve app}
 }
 \value{
 an app environment

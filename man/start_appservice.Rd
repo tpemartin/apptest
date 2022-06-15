@@ -7,7 +7,8 @@
 start_appservice(
   appPath = "./temp/index.html",
   chromedrivePort = 9515,
-  app_port = 4321
+  app_port = 4321,
+  google = F
 )
 }
 \value{

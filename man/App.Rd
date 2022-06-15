@@ -4,7 +4,7 @@
 \alias{App}
 \title{Generate an app instance}
 \usage{
-App(plt, name = "app", js = NA, css = NA)
+App(plt, htmlfile = "temp/index.html", name = "app", google = F)
 }
 \arguments{
 \item{plt}{a widget}
