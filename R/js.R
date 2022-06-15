@@ -1,7 +1,7 @@
 test_js <- function() {
   assertthat::assert_that(
-    exists("session", envir=.GlobalEnv),
-    msg="There is no session object in the global environment. Consider create one via econWeb::webdriverChromeSession()."
+    exists("session"),
+    msg="There is no session object avaiable. Consider create one via econWeb::webdriverChromeSession()."
   )
   rstudioapi::getSourceEditorContext() -> document
 
@@ -22,7 +22,7 @@ test_js <- function() {
       paste0(document$contents, collapse="\n")
   }
 
-  .GlobalEnv$session$executeScript(jsCodes)
+  session$executeScript(jsCodes)
 
   rstudioapi::documentSave(id=document$id)
 

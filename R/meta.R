@@ -34,15 +34,17 @@ create_appMeta <- function(app, plt, name="app", js=NA, css=NA, newCreate=T) {
     dep=appDependency()
     dirpath = dep$src$file
 
-    if(length(dep$script)!=0) file.edit2(file.path(dirpath, dep$script))
-    if(length(dep$stylesheet)!=0) file.edit2(file.path(dirpath, dep$stylesheet))
+    if(length(dep$script)!=0 && !file.exists(file.path(dirpath, dep$script))) file.edit2(file.path(dirpath, dep$script))
+    if(length(dep$stylesheet)!=0 && !file.exists(file.path(dirpath, dep$stylesheet))) file.edit2(file.path(dirpath, dep$stylesheet))
 
     # browser()
     # eval(app_depFunExpr, envir=rlang::current_env())
     app$meta$dependency <-
       appDependency
     app$meta$dependencyScript <- appDependency |> body()
-
+    flag_firstTime=!file.exists("R/app_dependency.R")
+    create_appDependencyScript()
+    if(flag_firstTime) file.edit("R/app_dependency.R")
     htmltools::attachDependencies(
       app$meta$appcontent,
       appDependency()) ->
@@ -138,4 +140,20 @@ split_filepath = function(file){
     folder=ffolder,
     file=ffile
   )
+}
+create_appDependencyScript = function(){
+  rstudioapi::getActiveProject() |> basename() -> packagename
+  stringr::str_glue(
+    'attachAppDep = function(tag) {
+  tagList(
+    tag,
+    htmltools::htmlDependency(
+    name = "app",
+    version = "1.0",
+    src = c(file = system.file("app", package="<<packagename>>" )),
+    script = "js/appScript.js",
+    stylesheet = "css/appStyle.css")
+  )
+  }', .open="<<", .close=">>") -> script
+  xfun::write_utf8(script, con="R/app_dependency.R")
 }

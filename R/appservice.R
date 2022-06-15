@@ -6,18 +6,26 @@
 #' @param css css file name (no need for folder)
 #' @return a list
 #' @export
-App <- function(plt, name="app", js=NA, css=NA){
+App <- function(plt,htmlfile="temp/index.html", name="app", js=NA, css=NA, google=F){
+  appTestEnv = new.env()
   app <- new.env()
-  app$create <- function(htmlfile="temp/index.html"){
+  appTestEnv$app <- app
+  attach(appTestEnv)
+  app$create <- function(){
     app$file <- htmlfile
     create_appMeta(app, plt=plt, name=name, js=js, css=css, newCreate=T)
     create_testapp(app$meta, htmlfile)}
   app$setup <- function(app_port=4321, chromedrivePort=9515){
     app$meta$app_port = app_port
-    start_appservice(app$file, chromedrivePort, app_port) -> app$meta$jobId
+    start_appservice(app$file, chromedrivePort, app_port, google=google) -> app$meta$jobId
   }
   app$view <- refreshApp
-  app$update <- function(plt=NULL, name=NA, js=NA, css=NA){
+  app$update <- function(plt=NULL, htmlfile=NULL, name=NA, js=NA, css=NA){
+    if(!is.null(htmlfile)){
+      app$file=
+        file.path(
+          dirname(app$file),
+          basename(htmlfile))}
     flag_mustUpdateApp = !is.null(plt)
     if(flag_mustUpdateApp) app$meta$appcontent=plt
     flag_jsAlreadyInMeta=!is.null(app$meta$js)
@@ -38,9 +46,10 @@ App <- function(plt, name="app", js=NA, css=NA){
 
     if(flag_dependencyChange) updateDependency(app, name=name, js=js, css=css)
 
-    create_testapp(app$meta$appcontent, app$file)
+    create_testapp(app$meta, app$file)
     app$view()
   }
+  app$test = app$update
   app$resume <- resumeApp(app)
   app$suspend <- function(){
     rstudioapi::launcherControlJob(
@@ -52,6 +61,7 @@ App <- function(plt, name="app", js=NA, css=NA){
       jobId = app$meta$jobId, operation="kill"
     )
   }
+  #attach(appTestEnv)
   app
 }
 
@@ -59,30 +69,39 @@ App <- function(plt, name="app", js=NA, css=NA){
 #'
 #' @return a job id
 #' @export
-start_appservice <- function(appPath="./temp/index.html", chromedrivePort=9515, app_port=4321){
+start_appservice <- function(appPath="./temp/index.html", chromedrivePort=9515, app_port=4321, google=F){
 
-  .GlobalEnv$app_port <- app_port
+  targetEnv = rlang::search_env("appTestEnv")
+  targetEnv$app_port <- app_port
   appPath=normalizePath(appPath)
   system.file("server/appserving.R", package="apptest") -> jobscript
 
   # httpuv::stopDaemonizedServer()
-
+  targetEnv$app_port -> .GlobalEnv$app_port
   rstudioapi::jobRunScript(
     jobscript,
     workingDir=dirname(appPath), #normalizePath("./temp"),
     importEnv = T,
-    exportEnv="R_GlobalEnv") -> jobId
-  if(!exists("session", envir = .GlobalEnv)){
-    .GlobalEnv$session=webdriverChromeSession(chromedrivePort)
-    .GlobalEnv$session$start_session()
+    exportEnv="R_GlobalEnv") -> jobId -> targetEnv$jobId
+
+
+  if(!exists("session")){
+    targetEnv$session=webdriverChromeSession(chromedrivePort)
+    targetEnv$session$start_session()
 
   }
 
-  appUrl <- glue::glue("http://127.0.0.1:{app_port}/{basename(appPath)}")
-  .GlobalEnv$session$go(appUrl)
-  .GlobalEnv$session$appUrl <- appUrl
-  .GlobalEnv$session$appRefresh = function(){
-    .GlobalEnv$session$go(.GlobalEnv$session$appUrl)
+  # appUrl <- glue::glue("http://127.0.0.1:{app_port}/{basename(appPath)}")
+  if(google){
+    appUrl = glue::glue("http://localhost:{app_port}/{basename(appPath)}") } else {
+      appUrl = glue::glue("http://127.0.0.1:{app_port}/{basename(appPath)}")
+    }
+  appUrl <- as.character(appUrl)
+  targetEnv$session$go(appUrl)
+  targetEnv$session$appUrl <- appUrl
+  targetEnv$session$appRefresh = function(appUrl=NULL){
+    if(is.null(appUrl)) appUrl=targetEnv$session$appUrl
+    targetEnv$session$go(appUrl)
   }
   invisible(jobId)
 }
@@ -148,8 +167,7 @@ chromeDriverShowWidget <- function(sessionx){
 #' @export
 #'
 create_testapp = function(appmeta, htmlfile="temp/index.html"){
-  appmeta=app$meta
-  if(!is.function(appmeta$dependency) && is.na(appmeta$dependency)){
+  if(!is.function(appmeta$dependency) && (is.null(appmeta$dependency) || is.na(appmeta$dependency))){
     tag=appmeta$appcontent
   } else {
     tag=htmltools::tagList(
@@ -174,10 +192,14 @@ create_testapp = function(appmeta, htmlfile="temp/index.html"){
 }
 refreshApp <- function(){
   assertthat::assert_that(
-    exists("session", envir=.GlobalEnv),
+    exists("session"), #envir=.GlobalEnv),
     msg="No session in the global environment."
   )
-  session$appRefresh()
+  appUrl =
+    file.path(
+      dirname(session$appUrl), basename(app$file)
+    )
+  session$appRefresh(appUrl)
 }
 resumeApp <- function(app){
   function(chromedrivePort=9515, app_port=app$meta$jobId){

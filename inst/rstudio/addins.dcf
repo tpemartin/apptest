@@ -1,11 +1,32 @@
-Name: Update package
+Name: Start App Test
 Description: New Addin Description
-Binding: update_package
+Binding: startAppTest
 Interactive: false
 
 Name: Test js
 Description: New Addin Description
 Binding: test_js
+Interactive: false
+
+
+Name: Move PWA to Docs
+Description: New Addin Description
+Binding: movePWA2Doc
+Interactive: false
+
+Name: Move PWA to Temp
+Description: New Addin Description
+Binding: movePWA2Temp
+Interactive: false
+
+Name: Setup App Publish
+Description: New Addin Description
+Binding: setup_appPublish
+Interactive: false
+
+Name: Start Ggl API App test
+Description: New Addin Description
+Binding: startGoogleAPItest
 Interactive: false
 
 Name: Start local server job
@@ -23,3 +44,7 @@ Description: New Addin Description
 Binding: launchRegularChrome
 Interactive: false
 
+Name: Update package
+Description: New Addin Description
+Binding: update_package
+Interactive: false
