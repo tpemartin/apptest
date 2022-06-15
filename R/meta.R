@@ -34,21 +34,24 @@ create_appMeta <- function(app, plt, name="app", js=NA, css=NA, newCreate=T) {
     dep=appDependency()
     dirpath = dep$src$file
 
+    # create appScript.js and appStyle.css
     if(length(dep$script)!=0 && !file.exists(file.path(dirpath, dep$script))) file.edit2(file.path(dirpath, dep$script))
     if(length(dep$stylesheet)!=0 && !file.exists(file.path(dirpath, dep$stylesheet))) file.edit2(file.path(dirpath, dep$stylesheet))
 
     # browser()
     # eval(app_depFunExpr, envir=rlang::current_env())
-    app$meta$dependency <-
-      appDependency
-    app$meta$dependencyScript <- appDependency |> body()
+
+    # app$meta$dependency <-
+    #   appDependency
+    # app$meta$dependencyScript <- appDependency |> body()
+    ## create app_dependency.R
     flag_firstTime=!file.exists("R/app_dependency.R")
     create_appDependencyScript()
     if(flag_firstTime) file.edit("R/app_dependency.R")
-    htmltools::attachDependencies(
-      app$meta$appcontent,
-      appDependency()) ->
-      app$meta$appcontent
+    # htmltools::attachDependencies(
+    #   app$meta$appcontent,
+    #   appDependency()) ->
+    #   app$meta$appcontent
   }
 }
 updateDependency = function(app, name=NA, js=NA, css=NA){

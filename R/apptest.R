@@ -7,8 +7,8 @@
 #'
 #' @return an app environment
 #' @export
-apptest = function(name="app", js=NA, css=NA, port=8880, google=F){
-    App(htmltools::tagList() ,name=name, js=js, css=css, google=google) -> app
+apptest = function(name="app", port=8880, google=F){
+    App(htmltools::tagList() ,name=name, google=google) -> app
   # browser()
   app$create()
   app$setup(app_port=port)
@@ -19,7 +19,7 @@ apptest = function(name="app", js=NA, css=NA, port=8880, google=F){
 
 startAppTest = function(){
   paste0(sample(1:8,4, T), collapse = "") |> as.integer() -> port
-  apptest(js="appScript.js", css="appStyle.css",
+  apptest(
     port=port) ->> app
   appTestEnv = new.env()
   appTestEnv$app = app

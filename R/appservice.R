@@ -6,7 +6,8 @@
 #' @param css css file name (no need for folder)
 #' @return a list
 #' @export
-App <- function(plt,htmlfile="temp/index.html", name="app", js=NA, css=NA, google=F){
+App <- function(plt,htmlfile="temp/index.html", name="app", google=F){
+  js="appScript.js"; css="appStyle.css";
   appTestEnv = new.env()
   app <- new.env()
   appTestEnv$app <- app
