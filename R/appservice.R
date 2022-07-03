@@ -8,6 +8,7 @@
 #' @export
 App <- function(plt,htmlfile="temp/index.html", name="app", google=F){
   js="appScript.js"; css="appStyle.css";
+  if(exists("app")) detach(appTestEnv)
   appTestEnv = new.env()
   app <- new.env()
   appTestEnv$app <- app
@@ -16,7 +17,10 @@ App <- function(plt,htmlfile="temp/index.html", name="app", google=F){
     app$file <- htmlfile
     create_appMeta(app, plt=plt, name=name, js=js, css=css, newCreate=T)
     create_testapp(app$meta, htmlfile)}
-  app$setup <- function(app_port=4321, chromedrivePort=9515){
+
+  app$setup <- function(app_port=
+      httpuv::randomPort(),#4321,
+    chromedrivePort=9515){
     app$meta$app_port = app_port
     start_appservice(app$file, chromedrivePort, app_port, google=google) -> app$meta$jobId
   }
@@ -26,9 +30,19 @@ App <- function(plt,htmlfile="temp/index.html", name="app", google=F){
       app$file=
         file.path(
           dirname(app$file),
-          basename(htmlfile))}
+          basename(htmlfile))} else{
+            app$file=
+              file.path(
+                dirname(app$file),
+                "index.html")
+          }
     flag_mustUpdateApp = !is.null(plt)
-    if(flag_mustUpdateApp) app$meta$appcontent=plt
+    if(flag_mustUpdateApp){
+      app$meta$appcontent=plt
+      # htmltools::save_html(
+      #   plt, file=app$file
+      # )
+    }
     flag_jsAlreadyInMeta=!is.null(app$meta$js)
     flag_cssAlreadyInMeta=!is.null(app$meta$css)
     flag_nameChange = !is.na(name) && app$meta$name != name
@@ -62,10 +76,17 @@ App <- function(plt,htmlfile="temp/index.html", name="app", google=F){
       jobId = app$meta$jobId, operation="kill"
     )
   }
+  app$move = function(from, to) {
+    moveApp(from, to)
+    app$moveCheck = function(){
+      servr::httw(to)
+    }
+  }
   #attach(appTestEnv)
   app
 }
-
+moveCheck = function(path){
+}
 #' Start to serve web app at temp/ and lauch chromedriver for inspection
 #'
 #' @return a job id
@@ -74,14 +95,14 @@ start_appservice <- function(appPath="./temp/index.html", chromedrivePort=9515, 
 
   targetEnv = rlang::search_env("appTestEnv")
   targetEnv$app_port <- app_port
-  appPath=normalizePath(appPath)
+  #appPath=normalizePath(appPath)
   system.file("server/appserving.R", package="apptest") -> jobscript
 
   # httpuv::stopDaemonizedServer()
   targetEnv$app_port -> .GlobalEnv$app_port
   rstudioapi::jobRunScript(
     jobscript,
-    workingDir=dirname(appPath), #normalizePath("./temp"),
+    workingDir=normalizePath(dirname(appPath)), #normalizePath("./temp"),
     importEnv = T,
     exportEnv="R_GlobalEnv") -> jobId -> targetEnv$jobId
 
@@ -176,6 +197,7 @@ create_testapp = function(appmeta, htmlfile="temp/index.html"){
       appmeta$dependency()
     )
   }
+  flag_noTag = (length(appmeta$appcontent) == 0)
   # tag=app$meta$appcontent
   folderpath = dirname(htmlfile)
   htmlfile=basename(htmlfile)
@@ -186,9 +208,9 @@ create_testapp = function(appmeta, htmlfile="temp/index.html"){
     rstudioapi::initializeProject(normalizePath(glue::glue("./{folderpath}")))
   }
 
-  htmltools::save_html(
+  if(!flag_noTag) {htmltools::save_html(
     htmltools::tagList(tag, dep_mobile()), file=file.path(folderpath,htmlfile)
-  )
+  )}
   file.path(folderpath, htmlfile)
 }
 refreshApp <- function(){

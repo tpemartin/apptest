@@ -167,3 +167,34 @@ recreate_list <- function(result=list(), .list) {
   )
   result
 }
+
+moveApp = function(.fromfolder, .tofolder){
+    list.files(.fromfolder, recursive=T)-> wwwfiles
+
+    # createDirInsideTargetFolder
+    subfolder=dirname(wwwfiles) |>
+      unique() |> stringr::str_remove("^\\.")
+    toFolders = file.path(.tofolder,subfolder)
+    toFolders |>
+      purrr::walk(
+        ~{
+          if(!dir.exists(.x)){
+            dir.create(.x, recursive = T)
+          }})
+
+    file.path(.fromfolder, wwwfiles) |>
+      normalizePath() -> fromFiles
+
+    .tofolder=normalizePath(.tofolder)
+    toFiles = file.path(
+      .tofolder, wwwfiles
+    )
+
+    file.copy(
+      from=fromFiles,
+      to=toFiles,
+      # recursive = T,
+      overwrite = T
+    ) -> status
+  invisible(data.frame(from=fromFiles, to=toFiles, status=status))
+}

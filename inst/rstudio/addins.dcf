@@ -8,15 +8,9 @@ Description: New Addin Description
 Binding: test_js
 Interactive: false
 
-
-Name: Move PWA to Docs
+Name: Start Ngrok Tunnel
 Description: New Addin Description
-Binding: movePWA2Doc
-Interactive: false
-
-Name: Move PWA to Temp
-Description: New Addin Description
-Binding: movePWA2Temp
+Binding: start_ngrok
 Interactive: false
 
 Name: Setup App Publish
@@ -48,3 +42,4 @@ Name: Update package
 Description: New Addin Description
 Binding: update_package
 Interactive: false
+

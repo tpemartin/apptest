@@ -13,18 +13,20 @@ apptest = function(name="app", port=8880, google=F){
   app$create()
   app$setup(app_port=port)
   app$view()
-  app=pwa(app)
   return(app)
 }
 
 startAppTest = function(){
-  paste0(sample(1:8,4, T), collapse = "") |> as.integer() -> port
+  # paste0(sample(1:8,4, T), collapse = "") |> as.integer() -> port
+  if(!exists("app_port")){app_port=httpuv::randomPort()} else {
+    app_port=app_port
+  }
   apptest(
-    port=port) ->> app
-  appTestEnv = new.env()
-  appTestEnv$app = app
-  appTestEnv$session=session
-  attach(appTestEnv)
+    port=app_port) ->> app
+  #appTestEnv = new.env()
+  #appTestEnv$app = app
+  #appTestEnv$session=session
+  #attach(appTestEnv)
   # rm(appTestEnv, envir=.GlobalEnv)
 }
 startGoogleAPItest = function(){
@@ -34,7 +36,7 @@ startGoogleAPItest = function(){
     msg="Please set googlePort in your system environment first"
   )
 
-  apptest(js="appScript.js", css="appStyle.css",
+  apptest(
     port=googlePort, google=T) ->> gapp
 
   appTestEnv = new.env()
