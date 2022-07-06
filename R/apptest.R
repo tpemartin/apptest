@@ -15,8 +15,12 @@ apptest = function(name="app", port=8880, google=F){
   app$view()
   return(app)
 }
-
+isAppTestEnv_attached = function(){
+  "appTestEnv" %in% search()
+}
 startAppTest = function(){
+
+  if(isAppTestEnv_attached()) detach("appTestEnv")
   # paste0(sample(1:8,4, T), collapse = "") |> as.integer() -> port
   if(!exists("app_port")){app_port=httpuv::randomPort()} else {
     app_port=app_port
@@ -30,6 +34,8 @@ startAppTest = function(){
   # rm(appTestEnv, envir=.GlobalEnv)
 }
 startGoogleAPItest = function(){
+  if(isAppTestEnv_attached()) detach("appTestEnv")
+
   googlePort = Sys.getenv("googlePort")
   assertthat::assert_that(
     googlePort!="",
@@ -37,11 +43,11 @@ startGoogleAPItest = function(){
   )
 
   apptest(
-    port=googlePort, google=T) ->> gapp
+    port=googlePort, google=T) #->> gapp
 
-  appTestEnv = new.env()
-  appTestEnv$gapp = gapp
-  appTestEnv$session=session
-  attach(appTestEnv)
+  # appTestEnv = new.env()
+  # appTestEnv$gapp = gapp
+  # appTestEnv$session=session
+  # attach(appTestEnv)
   # rm(appTestEnv, envir=.GlobalEnv)
 }
